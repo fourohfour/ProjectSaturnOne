@@ -40,6 +40,9 @@ public class TreeNode {
 	}
 	
 	public void setParent(TreeNode p){
+		if (this.parent != null){
+			this.parent.removeChild(this);
+		}
 		this.parent = p;
 	}
 	
@@ -55,6 +58,10 @@ public class TreeNode {
 		children.add(t);
 	}
 	
+	public void removeChild(TreeNode t){
+		children.remove(t);
+	}
+	
 	public List<TreeNode> getChildren(){
 		return children;
 	}
@@ -65,6 +72,11 @@ public class TreeNode {
 		for (TreeNode child : this.getChildren()){
 			child.printSelf(indentLevel + 1);
 		}
+	}
+	
+	@Override
+	public String toString(){
+		return String.valueOf(this.id) + " " + this.type + " " + this.name;
 	}
 	
 	@Override
