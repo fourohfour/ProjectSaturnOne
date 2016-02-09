@@ -46,6 +46,24 @@ public class TreeNode {
 		this.parent = p;
 	}
 	
+	public TreeNode getPrev(){
+		List<TreeNode> siblings = this.getParent().getChildren();
+		int pos = siblings.indexOf(this);
+		if (pos == 0){
+			return null;
+		}
+		return siblings.get(pos - 1);
+	}
+	
+	public TreeNode getNext(){
+		List<TreeNode> siblings = this.getParent().getChildren();
+		int pos = siblings.indexOf(this);
+		if (pos == siblings.size() - 1){
+			return null;
+		}
+		return siblings.get(pos + 1);
+	}
+	
 	public Integer getLine(){
 		return this.line;
 	}
@@ -53,6 +71,14 @@ public class TreeNode {
 	public Integer getToken(){
 		return this.token;
 	}
+	
+	public void replaceChild(TreeNode o, TreeNode n){
+		int pos = this.getChildren().indexOf(o);
+		o.setParent(null);
+		this.getChildren().remove(o);
+		this.getChildren().add(pos, n);
+	}
+	
 	public void addChild(TreeNode t){
 		t.setParent(this);
 		children.add(t);
@@ -66,11 +92,18 @@ public class TreeNode {
 		return children;
 	}
 	
-	public void printSelf(int indentLevel){
-		String repeated = new String(new char[indentLevel]).replace("\0", "    ");
-		System.out.println(repeated.concat(this.type + " " + this.name));
-		for (TreeNode child : this.getChildren()){
-			child.printSelf(indentLevel + 1);
+	public void printSelf(int indentLevel, boolean printExpressions){
+		if (this.getType() == "EXPRESSION" && !printExpressions){
+			for (TreeNode child : this.getChildren()){
+				child.printSelf(indentLevel, false);
+			}
+		}
+		else {
+			String repeated = new String(new char[indentLevel]).replace("\0", "    ");
+			System.out.println(repeated.concat(this.type + " " + this.name));
+			for (TreeNode child : this.getChildren()){
+				child.printSelf(indentLevel + 1, printExpressions);
+			}
 		}
 	}
 	

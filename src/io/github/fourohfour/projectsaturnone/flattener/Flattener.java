@@ -85,10 +85,10 @@ public class Flattener {
 			Map<Integer, TreeNode> ids = new HashMap<>();
 			for (int n = 0; n < flatNodes.size(); n++){
 				if (flatNodes.get(n).getType() == "ASSIGNMENT"){
-					ids.put(0                   , new TreeNode("EXPRESSION", "AUTO", lineCount, -1));
-					ids.put(n                   , new TreeNode("_EXPREND", "AUTO", lineCount, -1));
-					ids.put(n + 1               , new TreeNode("EXPRESSION", "AUTO", lineCount, -1));
-					ids.put(flatNodes.size()    , new TreeNode("_EXPREND", "AUTO", lineCount, -1));
+					ids.put(0                   , new TreeNode("EXPRESSION", "ASSIGNMENT_BOX", lineCount, -1));
+					ids.put(n                   , new TreeNode("_EXPREND", "ASSIGNMENT_BOX", lineCount, -1));
+					ids.put(n + 1               , new TreeNode("EXPRESSION", "ASSIGNMENT_BOX", lineCount, -1));
+					ids.put(flatNodes.size()    , new TreeNode("_EXPREND", "ASSIGNMENT_BOX", lineCount, -1));
 				}
 			}
 			int shift = 0;
@@ -118,8 +118,8 @@ public class Flattener {
 				TreeNode node = flatNodes.get(n);
 				if (node.getType() == "OPERATOR"){
 					try{
-						TreeNode op1 = flatNodes.get(n-1);
-						TreeNode op2 = flatNodes.get(n+1);
+						TreeNode op1 = node.getPrev();
+						TreeNode op2 = node.getNext();
 						int correctTypes = 0;
 						for (String type : operandTypes){
 							if (op1.getType().equals(type)){
@@ -137,6 +137,9 @@ public class Flattener {
 							this.error(lineCount, line, node.getName(), "(" + op1.getType() + ", " +op2.getType() + ") are not allowed operand types for operation " + node.getName());
 							return 1;
 						}
+						TreeNode containingExpr = new TreeNode("EXPRESSION", "OPERATOR_BOX", lineCount, -1);
+						node.getParent().replaceChild(node, containingExpr);
+						containingExpr.addChild(node);
 					}
 					catch (IndexOutOfBoundsException exception){
 						this.error(lineCount, line, node.getName(), "Operator requires a token before and after itself.");
@@ -144,7 +147,16 @@ public class Flattener {
 					}
 				}
 				else if (node.getType() == "ASSIGNMENT"){
-					//pass
+					TreeNode op1 = node.getPrev();
+					TreeNode op2 = node.getNext();
+					if (op1.getType().equals("EXPRESSION") && op2.getType().equals("EXPRESSION")){
+						node.addChild(op1);
+						node.addChild(op2);
+					}
+					else {
+						this.error(lineCount, line, node.getName(), "ASSIGNMENT requires two EXPRESSIONS on either side.");
+						return 1;
+					}
 				}
 			}
 			lineCount++;

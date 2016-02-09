@@ -11,7 +11,7 @@ public class SyntaxTree {
 		return base;
 	}
 	
-	public void print(){
-		base.printSelf(1);
+	public void print(boolean printExpressions){
+		base.printSelf(0, printExpressions);
 	}
 }
