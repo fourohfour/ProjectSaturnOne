@@ -1,6 +1,7 @@
 package io.github.fourohfour.projectsaturnone.flattener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,7 @@ public class Flattener {
 			String[] tokens = getTokens(line);
 			String[] types  = new String[tokens.length];
 			List<TreeNode> flatNodes = new ArrayList<>();
+			
 			// Type Annotation
 			for (int t = 0; t < tokens.length; t++){
 				String token = tokens[t];
@@ -82,6 +84,7 @@ public class Flattener {
 				flatNodes.add(new TreeNode(types[t], token, lineCount, t));
 			}
 			
+			// Assignment Expression Boxing
 			Map<Integer, TreeNode> ids = new HashMap<>();
 			for (int n = 0; n < flatNodes.size(); n++){
 				if (flatNodes.get(n).getType() == "ASSIGNMENT"){
@@ -98,7 +101,7 @@ public class Flattener {
 			}
 			
 			
-			// Bunching
+			// Expression Pass
 			TreeNode curbase = base;
 			for (int n = 0; n < flatNodes.size(); n++){
 				TreeNode node = flatNodes.get(n);
@@ -114,6 +117,7 @@ public class Flattener {
 				}
 			}
 			
+			// Operator Pass
 			for (int n = 0; n < flatNodes.size(); n++){
 				TreeNode node = flatNodes.get(n);
 				if (node.getType() == "OPERATOR"){
@@ -146,7 +150,13 @@ public class Flattener {
 						return 1;
 					}
 				}
-				else if (node.getType() == "ASSIGNMENT"){
+
+			}
+			
+			// Assignment Pass
+			for (int n = 0; n < flatNodes.size(); n++){
+				TreeNode node = flatNodes.get(n);
+				if (node.getType() == "ASSIGNMENT"){
 					TreeNode op1 = node.getPrev();
 					TreeNode op2 = node.getNext();
 					if (op1.getType().equals("EXPRESSION") && op2.getType().equals("EXPRESSION")){
@@ -168,11 +178,77 @@ public class Flattener {
 		return tree;
 	}
 	
-//	public String[] flatten(){
-//		
-//	}
-	
 	private String[] getTokens(String s){
-		return s.split(" ");
+		List<Character> str = new ArrayList<>();
+		for (Character c : s.toCharArray()){
+			str.add(c);
+		}
+		
+		String[] specialTokens = new String[]{"(",")","+", "-", "*", "==","="};
+		boolean locked = false;
+		List<String> lockedTokens = new ArrayList<>();
+		int lockCount = 0;
+		List<Integer> spacePoints = new ArrayList<Integer>();
+		int cCount = 0;
+		
+		for (char c : str){
+			if (!locked){
+				for (String token : specialTokens){
+					if (token.charAt(0) == c){
+						lockedTokens.add(token);
+						locked = true;
+					}
+				}
+			}
+			String finalToken = null;
+			if (locked) {
+				System.out.println(c);
+				List<String> newTokens = new ArrayList<>();
+				for (String token : lockedTokens){
+					if (token.charAt(lockCount) == c){
+						if (token.length() == lockCount + 1){
+							finalToken = token;
+						}
+						else {
+							newTokens.add(token);
+						}
+					}
+				}
+				if (finalToken != null){
+					spacePoints.add(cCount - lockCount);
+					spacePoints.add(cCount + 1);
+					lockCount = 0;
+					lockedTokens = new ArrayList<>();
+					locked = false;
+				}
+				else if (newTokens.size() == 0){
+					lockCount = 0;
+					lockedTokens = new ArrayList<>();
+					locked = false;
+				}
+				else {
+				    lockedTokens = newTokens;
+				    lockCount++;
+				}
+			}
+			cCount++;
+		}
+		
+		int add = 0;
+		for (int i : spacePoints){
+			str.add(i + add, ' ');
+			add++;
+		}
+		
+		String finalStr = "";
+		char last = ' ';
+		for (Character c : str){
+			if (!(last == ' ' && c == ' ')){
+			    finalStr = finalStr + c;
+			}
+		    last = c;
+		}
+		System.out.println(Arrays.toString(finalStr.split(" ")));
+		return finalStr.split(" ");
 	}
 }
